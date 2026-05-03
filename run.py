@@ -16,6 +16,7 @@ from backend.api.server import app
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
-    print("[*] Multi-Agent Task Automation Platform")
-    print(f"    Backend  -> http://localhost:{port}")
-    app.run(host="0.0.0.0", port=port, debug=True, use_reloader=False)
+    print("\n" + "="*50)
+    print(f"🚀 MULTI-AGENT BACKEND IS LIVE ON http://127.0.0.1:{port}")
+    print("="*50 + "\n")
+    app.run(host="127.0.0.1", port=port, debug=True, use_reloader=False)

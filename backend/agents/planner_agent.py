@@ -1,6 +1,6 @@
 import os
 import json
-from openai import AsyncOpenAI
+from openai import OpenAI
 
 PLANNER_SYSTEM_PROMPT = """
 You are the specialized PLANNER AGENT of the Multi-Agent Task Automation Platform.
@@ -18,37 +18,56 @@ Return a JSON object with:
 """
 
 class PlannerAgent:
-    def __init__(self, model: str = "google/gemini-2.5-flash"):
+    def __init__(self, model: str = "meta-llama/llama-3.1-8b-instruct:free"):
         self.model = model
 
     def _get_client(self):
-        base_url = os.environ.get("OPENAI_BASE_URL")
-        return AsyncOpenAI(
+        return OpenAI(
             api_key=os.environ["OPENAI_API_KEY"],
-            base_url=base_url if base_url else None,
-            default_headers={"HTTP-Referer": "http://localhost:3000", "X-Title": "Multi-Agent Platform"} if base_url else None
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={"HTTP-Referer": "http://localhost:3001", "X-Title": "Multi-Agent Platform"}
         )
 
     async def plan(self, goal: str, context: list = None):
+        import requests
         messages = [
             {"role": "system", "content": PLANNER_SYSTEM_PROMPT},
             {"role": "user", "content": f"User Goal: {goal}"}
         ]
-        if context:
-            messages.insert(1, {"role": "system", "content": f"Conversation Context: {json.dumps(context)}"})
-
-        client = self._get_client()
+        
+        print(f"[PLANNER] 🤖 Requesting plan from {self.model}...")
         try:
-            print(f"[PLANNER] 🤖 Requesting plan from {self.model}...")
-            response = await client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=0.3,
-                max_tokens=2000,
-                response_format={"type": "json_object"}
+            response = requests.post(
+                url="https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}",
+                    "HTTP-Referer": "http://localhost:3001",
+                    "X-Title": "Multi-Agent Platform",
+                    "Content-Type": "application/json"
+                },
+                data=json.dumps({
+                    "model": "openai/gpt-3.5-turbo",
+                    "messages": messages,
+                    "max_tokens": 500,
+                    "response_format": {"type": "json_object"}
+                })
             )
+            
+            if response.status_code != 200:
+                print(f"[PLANNER] ❌ API ERROR: {response.status_code} - {response.text}")
+                raise Exception(f"OpenRouter Error {response.status_code}: {response.text}")
+
             print("[PLANNER] ✅ Response received.")
-            return json.loads(response.choices[0].message.content)
+            raw_content = response.json()["choices"][0]["message"]["content"]
+            try:
+                return json.loads(raw_content)
+            except json.JSONDecodeError:
+                # Fallback: extract json from markdown blocks
+                import re
+                match = re.search(r'\{.*\}', raw_content.replace('\n', ''), re.DOTALL)
+                if match:
+                    return json.loads(match.group(0))
+                return {"goal_understanding": "Fallback logic applied.", "tasks": []}
         except Exception as e:
-            print(f"[PLANNER] ❌ API ERROR: {str(e)}")
+            print(f"[PLANNER] ❌ FATAL ERROR: {str(e)}")
             raise e

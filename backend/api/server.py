@@ -11,9 +11,9 @@ app = Flask(__name__)
 CORS(app)
 
 workflow = MultiAgentWorkflow(
-    planner_model=os.getenv("PLANNER_MODEL", "google/gemini-2.5-flash"),
-    executor_model=os.getenv("EXECUTOR_MODEL", "google/gemini-2.5-flash"),
-    final_model=os.getenv("FINAL_MODEL", "google/gemini-2.5-flash"),
+    planner_model=os.getenv("PLANNER_MODEL", "openai/gpt-3.5-turbo").strip(),
+    executor_model=os.getenv("EXECUTOR_MODEL", "openai/gpt-3.5-turbo").strip(),
+    final_model=os.getenv("FINAL_MODEL", "openai/gpt-3.5-turbo").strip(),
 )
 
 def run_async(coro):
@@ -29,6 +29,7 @@ def health():
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
+    print("\n[SERVER] 📥 Incoming request received from frontend!")
     data = request.get_json(force=True)
     message = data.get("message", "").strip()
     session_id = data.get("session_id") or str(uuid.uuid4())
@@ -118,4 +119,7 @@ def stream_response(message, session_id, memory, context):
     return Response(stream_with_context(generate()), mimetype="text/event-stream")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    print("\n" + "="*50)
+    print("🚀 MULTI-AGENT BACKEND IS LIVE ON http://127.0.0.1:5000")
+    print("="*50 + "\n")
+    app.run(host="127.0.0.1", port=5000, debug=True)
