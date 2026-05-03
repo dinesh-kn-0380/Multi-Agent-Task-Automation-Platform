@@ -1,44 +1,19 @@
-# Cleanup and Push Script for Multi-Agent Platform (Compatibility Version)
+# Final Cleanup and Force Push Script
 
-Write-Host "Cleaning up unwanted files..." -ForegroundColor Cyan
-if (Test-Path "frontend") { Remove-Item -Recurse -Force "frontend" }
+Write-Host "Fixing embedded repository issue..." -ForegroundColor Cyan
+if (Test-Path "chatbot-ui-base/.git") { 
+    Remove-Item -Recurse -Force "chatbot-ui-base/.git" 
+    Write-Host "Removed nested .git folder." -ForegroundColor Yellow
+}
 
-Write-Host "Creating .gitignore to protect your API keys..." -ForegroundColor Cyan
-$gitignoreContent = @"
-# API Keys and Secrets
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+Write-Host "Updating repository remote URL..." -ForegroundColor Cyan
+git remote set-url origin https://github.com/dinesh-kn-0380/Multi-Agent-Task-Automation-Platform.git
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.venv
-venv/
-ENV/
-
-# Node
-node_modules/
-.next/
-out/
-build/
-dist/
-
-# System
-.DS_Store
-Thumbs.db
-"@
-$gitignoreContent | Out-File -FilePath ".gitignore" -Encoding ascii
-
-Write-Host "Initializing Git and Pushing to GitHub..." -ForegroundColor Cyan
-git init
+Write-Host "Force adding all files..." -ForegroundColor Cyan
 git add .
-git commit -m "feat: complete multi-agent task automation platform with premium UI"
-git remote add origin https://github.com/dinesh-kn-0380/Multi-Agent-Task-Automation-Platform.git
-git branch -M main
-git push -u origin main
+git commit -m "feat: complete platform with all frontend and backend files"
 
-Write-Host "DONE! Your code is now live on GitHub." -ForegroundColor Green
+Write-Host "Pushing to the correct repository..." -ForegroundColor Cyan
+git push -u origin main --force
+
+Write-Host "SUCCESS! Check your new repo now." -ForegroundColor Green
