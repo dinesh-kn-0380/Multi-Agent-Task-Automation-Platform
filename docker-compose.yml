@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  # ── Flask Multi-Agent Backend ────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      target: backend-builder
+    command: >
+      gunicorn
+        --worker-class sync
+        --workers 2
+        --threads 4
+        --timeout 120
+        --bind 0.0.0.0:5000
+        backend.api.server:app
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PLANNER_MODEL=${PLANNER_MODEL:-gpt-4o-mini}
+      - EXECUTOR_MODEL=${EXECUTOR_MODEL:-gpt-4o-mini}
+      - FINAL_MODEL=${FINAL_MODEL:-gpt-4o-mini}
+      - FLASK_DEBUG=${FLASK_DEBUG:-false}
+      - PORT=5000
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # ── Next.js Frontend ─────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      target: frontend-builder
+    command: npm start
+    working_dir: /app/frontend
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:5000
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  default:
+    name: multi-agent-network

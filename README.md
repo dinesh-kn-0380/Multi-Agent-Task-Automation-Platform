@@ -1,292 +1,251 @@
-# Chatbot UI
+# 🤖 Multi-Agent Task Automation Platform
 
-The open-source AI chat app for everyone.
+> **Built on top of [chatbot-ui](https://github.com/dinesh-kn-0380/chatbot-ui)**  
+> Aligned with **SDG 9 — Industry, Innovation, and Infrastructure**
 
-<img src="./public/readme/screenshot.png" alt="Chatbot UI" width="600">
+A production-grade AI system that transforms a single-agent chatbot into an intelligent **multi-agent orchestration platform** using a Planner → Executor → Final Agent pipeline.
 
-## Demo
+---
 
-View the latest demo [here](https://x.com/mckaywrigley/status/1738273242283151777?s=20).
+## 🏗 Architecture
 
-## Updates
-
-Hey everyone! I've heard your feedback and am working hard on a big update.
-
-Things like simpler deployment, better backend compatibility, and improved mobile layouts are on their way.
-
-Be back soon.
-
--- Mckay
-
-## Official Hosted Version
-
-Use Chatbot UI without having to host it yourself!
-
-Find the official hosted version of Chatbot UI [here](https://chatbotui.com).
-
-## Sponsor
-
-If you find Chatbot UI useful, please consider [sponsoring](https://github.com/sponsors/mckaywrigley) me to support my open-source work :)
-
-## Issues
-
-We restrict "Issues" to actual issues related to the codebase.
-
-We're getting excessive amounts of issues that amount to things like feature requests, cloud provider issues, etc.
-
-If you are having issues with things like setup, please refer to the "Help" section in the "Discussions" tab above.
-
-Issues unrelated to the codebase will likely be closed immediately.
-
-## Discussions
-
-We highly encourage you to participate in the "Discussions" tab above!
-
-Discussions are a great place to ask questions, share ideas, and get help.
-
-Odds are if you have a question, someone else has the same question.
-
-## Legacy Code
-
-Chatbot UI was recently updated to its 2.0 version.
-
-The code for 1.0 can be found on the `legacy` branch.
-
-## Updating
-
-In your terminal at the root of your local Chatbot UI repository, run:
-
-```bash
-npm run update
+```
+User Input
+    │
+    ▼
+┌─────────────────────────────────────────────────────────┐
+│              Multi-Agent Workflow (Orchestrator)         │
+│                                                         │
+│  ① Planner Agent                                        │
+│     └─ Understands goal → Decomposes into ordered tasks │
+│                                                         │
+│  ② Executor Agents (parallel where possible)            │
+│     ├─ Task 1 → Output 1                               │
+│     ├─ Task 2 → Output 2                               │
+│     └─ Task N → Output N                               │
+│                                                         │
+│  ③ Final Response Agent                                │
+│     └─ Aggregates → Structured Response               │
+└─────────────────────────────────────────────────────────┘
+    │
+    ▼
+Structured Output:
+  • Goal Understanding
+  • Task Breakdown
+  • Agent Execution Results
+  • Final Answer (Markdown)
 ```
 
-If you run a hosted instance you'll also need to run:
+---
 
-```bash
-npm run db-push
+## 📁 Project Structure
+
+```
+Multi-Agent-Task-Automation-Platform/
+│
+├── chatbot-ui-base/              ← Cloned from dinesh-kn-0380/chatbot-ui
+│   └── app/api/multi-agent/      ← NEW: Next.js proxy route
+│
+├── backend/
+│   ├── agents/
+│   │   ├── planner_agent.py      ← Goal decomposition
+│   │   ├── executor_agent.py     ← Parallel task execution
+│   │   └── final_agent.py        ← Response aggregation + refinement
+│   ├── workflows/
+│   │   └── orchestrator.py       ← Graph-based pipeline coordination
+│   ├── memory/
+│   │   └── conversation_memory.py← Session memory (sliding window)
+│   ├── api/
+│   │   └── server.py             ← Flask REST + SSE API
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── components/multi-agent/
+│   │   ├── AgentProgressPanel.tsx ← Real-time phase indicator
+│   │   ├── StructuredResponseCard.tsx ← Rich structured output
+│   │   └── MultiAgentChatInput.tsx   ← SSE-streaming input
+│   ├── styles/
+│   │   └── multi-agent.css       ← Dark glassmorphism UI
+│   └── types/
+│       └── multi-agent-api.ts    ← TypeScript API client
+│
+├── docker/
+│   └── start.sh                  ← Container startup script
+├── Dockerfile                    ← Multi-stage build
+├── docker-compose.yml            ← Service orchestration
+└── .env.example                  ← Environment template
 ```
 
-to apply the latest migrations to your live database.
+---
 
-## Local Quickstart
+## 🚀 Quick Start
 
-Follow these steps to get your own Chatbot UI instance running locally.
+### 1. Prerequisites
 
-You can watch the full video tutorial [here](https://www.youtube.com/watch?v=9Qq3-7-HNgw).
+- Python 3.11+
+- Node.js 20+
+- OpenAI API Key
+- (Optional) Supabase project for chatbot persistence
 
-### 1. Clone the Repo
+### 2. Environment Setup
 
 ```bash
-git clone https://github.com/mckaywrigley/chatbot-ui.git
+cp .env.example .env
+# Edit .env and set OPENAI_API_KEY and Supabase credentials
 ```
 
-### 2. Install Dependencies
-
-Open a terminal in the root directory of your local Chatbot UI repository and run:
+### 3. Run Backend (Flask)
 
 ```bash
+cd backend
+pip install -r requirements.txt
+python -m backend.api.server
+# Runs on http://localhost:5000
+```
+
+### 4. Run Frontend (Next.js)
+
+```bash
+cd chatbot-ui-base
 npm install
+npm run dev
+# Runs on http://localhost:3000
 ```
 
-### 3. Install Supabase & Run Locally
-
-#### Why Supabase?
-
-Previously, we used local browser storage to store data. However, this was not a good solution for a few reasons:
-
-- Security issues
-- Limited storage
-- Limits multi-modal use cases
-
-We now use Supabase because it's easy to use, it's open-source, it's Postgres, and it has a free tier for hosted instances.
-
-We will support other providers in the future to give you more options.
-
-#### 1. Install Docker
-
-You will need to install Docker to run Supabase locally. You can download it [here](https://docs.docker.com/get-docker) for free.
-
-#### 2. Install Supabase CLI
-
-**MacOS/Linux**
+### 5. Docker (All-in-one)
 
 ```bash
-brew install supabase/tap/supabase
+docker-compose up --build
+# Backend: http://localhost:5000
+# Frontend: http://localhost:3000
 ```
 
-**Windows**
+---
 
-```bash
-scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-scoop install supabase
+## 🔌 API Reference
+
+### `POST /api/chat`
+Run the full multi-agent pipeline.
+
+**Request:**
+```json
+{
+  "message": "Create a 4-week marketing plan for a SaaS product",
+  "session_id": "optional-uuid",
+  "stream": false
+}
 ```
 
-#### 3. Start Supabase
-
-In your terminal at the root of your local Chatbot UI repository, run:
-
-```bash
-supabase start
+**Response:**
+```json
+{
+  "run_id": "...",
+  "goal_understanding": "...",
+  "task_breakdown": [
+    { "id": "task_1", "title": "...", "status": "completed" }
+  ],
+  "agent_results": [
+    { "task_id": "task_1", "output": "...", "confidence": 0.92 }
+  ],
+  "final_answer": "## Marketing Plan\n...",
+  "timing": { "planning": 1.2, "execution": 4.5, "total": 6.8 }
+}
 ```
 
-### 4. Fill in Secrets
+Set `"stream": true` for Server-Sent Events.
 
-#### 1. Environment Variables
+### `GET /api/health`
+Service health check.
 
-In your terminal at the root of your local Chatbot UI repository, run:
+### `POST /api/session/clear`
+Clear conversation memory for a session.
 
-```bash
-cp .env.local.example .env.local
+---
+
+## 🧠 Agent Design Details
+
+### Planner Agent
+- Receives raw user goal + conversation context
+- Returns structured JSON task graph with dependency tracking
+- Temperature: 0.3 (deterministic planning)
+- Max tasks: 8
+
+### Executor Agent
+- Executes tasks in dependency order
+- Parallel execution for independent tasks (`asyncio.gather`)
+- Chain-of-thought reasoning captured per task
+- Returns confidence score + caveats
+
+### Final Response Agent
+- Aggregates all execution results
+- Iterative refinement loop (up to 2 passes)
+- Outputs fully structured Markdown-formatted final answer
+- Detects incomplete responses and re-runs if needed
+
+---
+
+## 🎨 Frontend Integration
+
+Import the multi-agent components into your chatbot UI:
+
+```tsx
+// In your chat page
+import { MultiAgentChatInput } from "@/components/multi-agent/MultiAgentChatInput"
+import { StructuredResponseCard } from "@/components/multi-agent/StructuredResponseCard"
+import "@/styles/multi-agent.css"
+
+// Render the agent input
+<MultiAgentChatInput
+  sessionId={sessionId}
+  onResponse={(response) => setResponses(prev => [...prev, response])}
+/>
+
+// Render structured responses
+{responses.map(r => (
+  <StructuredResponseCard key={r.run_id} response={r} />
+))}
 ```
 
-Get the required values by running:
+---
 
-```bash
-supabase status
-```
+## 📊 Output Format
 
-Note: Use `API URL` from `supabase status` for `NEXT_PUBLIC_SUPABASE_URL`
+Every multi-agent response contains:
 
-Now go to your `.env.local` file and fill in the values.
+| Section | Description |
+|---|---|
+| **Goal Understanding** | Restated user intent with nuance |
+| **Task Breakdown** | Ordered tasks with completion status |
+| **Agent Execution Results** | Per-task outputs with confidence scores |
+| **Final Answer** | Comprehensive Markdown-formatted response |
 
-If the environment variable is set, it will disable the input in the user settings.
+---
 
-#### 2. SQL Setup
+## 🌍 SDG 9 Alignment
 
-In the 1st migration file `supabase/migrations/20240108234540_setup.sql` you will need to replace 2 values with the values you got above:
+This platform directly supports **SDG 9 (Industry, Innovation, and Infrastructure)** by:
 
-- `project_url` (line 53): `http://supabase_kong_chatbotui:8000` (default) can remain unchanged if you don't change your `project_id` in the `config.toml` file
-- `service_role_key` (line 54): You got this value from running `supabase status`
+- Enabling **intelligent automation** for complex multi-step tasks
+- Providing **modular, scalable architecture** for production AI systems
+- Supporting **innovation** through multi-agent collaboration
+- Making advanced AI orchestration **accessible** through an open-source foundation
 
-This prevents issues with storage files not being deleted properly.
+---
 
-### 5. Install Ollama (optional for local models)
+## 🔧 Configuration
 
-Follow the instructions [here](https://github.com/jmorganca/ollama#macos).
+| Variable | Default | Description |
+|---|---|---|
+| `OPENAI_API_KEY` | — | Required. OpenAI API key |
+| `PLANNER_MODEL` | `gpt-4o-mini` | Model for the Planner Agent |
+| `EXECUTOR_MODEL` | `gpt-4o-mini` | Model for Executor Agents |
+| `FINAL_MODEL` | `gpt-4o-mini` | Model for the Final Agent |
+| `PORT` | `5000` | Flask backend port |
+| `FLASK_DEBUG` | `false` | Enable Flask debug mode |
+| `NEXT_PUBLIC_BACKEND_URL` | `http://localhost:5000` | Backend URL for frontend |
 
-### 6. Run app locally
+---
 
-In your terminal at the root of your local Chatbot UI repository, run:
+## 📄 License
 
-```bash
-npm run chat
-```
-
-Your local instance of Chatbot UI should now be running at [http://localhost:3000](http://localhost:3000). Be sure to use a compatible node version (i.e. v18).
-
-You can view your backend GUI at [http://localhost:54323/project/default/editor](http://localhost:54323/project/default/editor).
-
-## Hosted Quickstart
-
-Follow these steps to get your own Chatbot UI instance running in the cloud.
-
-Video tutorial coming soon.
-
-### 1. Follow Local Quickstart
-
-Repeat steps 1-4 in "Local Quickstart" above.
-
-You will want separate repositories for your local and hosted instances.
-
-Create a new repository for your hosted instance of Chatbot UI on GitHub and push your code to it.
-
-### 2. Setup Backend with Supabase
-
-#### 1. Create a new project
-
-Go to [Supabase](https://supabase.com/) and create a new project.
-
-#### 2. Get Project Values
-
-Once you are in the project dashboard, click on the "Project Settings" icon tab on the far bottom left.
-
-Here you will get the values for the following environment variables:
-
-- `Project Ref`: Found in "General settings" as "Reference ID"
-
-- `Project ID`: Found in the URL of your project dashboard (Ex: https://supabase.com/dashboard/project/<YOUR_PROJECT_ID>/settings/general)
-
-While still in "Settings" click on the "API" text tab on the left.
-
-Here you will get the values for the following environment variables:
-
-- `Project URL`: Found in "API Settings" as "Project URL"
-
-- `Anon key`: Found in "Project API keys" as "anon public"
-
-- `Service role key`: Found in "Project API keys" as "service_role" (Reminder: Treat this like a password!)
-
-#### 3. Configure Auth
-
-Next, click on the "Authentication" icon tab on the far left.
-
-In the text tabs, click on "Providers" and make sure "Email" is enabled.
-
-We recommend turning off "Confirm email" for your own personal instance.
-
-#### 4. Connect to Hosted DB
-
-Open up your repository for your hosted instance of Chatbot UI.
-
-In the 1st migration file `supabase/migrations/20240108234540_setup.sql` you will need to replace 2 values with the values you got above:
-
-- `project_url` (line 53): Use the `Project URL` value from above
-- `service_role_key` (line 54): Use the `Service role key` value from above
-
-Now, open a terminal in the root directory of your local Chatbot UI repository. We will execute a few commands here.
-
-Login to Supabase by running:
-
-```bash
-supabase login
-```
-
-Next, link your project by running the following command with the "Project ID" you got above:
-
-```bash
-supabase link --project-ref <project-id>
-```
-
-Your project should now be linked.
-
-Finally, push your database to Supabase by running:
-
-```bash
-supabase db push
-```
-
-Your hosted database should now be set up!
-
-### 3. Setup Frontend with Vercel
-
-Go to [Vercel](https://vercel.com/) and create a new project.
-
-In the setup page, import your GitHub repository for your hosted instance of Chatbot UI. Within the project Settings, in the "Build & Development Settings" section, switch Framework Preset to "Next.js".
-
-In environment variables, add the following from the values you got above:
-
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_OLLAMA_URL` (only needed when using local Ollama models; default: `http://localhost:11434`)
-
-You can also add API keys as environment variables.
-
-- `OPENAI_API_KEY`
-- `AZURE_OPENAI_API_KEY`
-- `AZURE_OPENAI_ENDPOINT`
-- `AZURE_GPT_45_VISION_NAME`
-
-For the full list of environment variables, refer to the '.env.local.example' file. If the environment variables are set for API keys, it will disable the input in the user settings.
-
-Click "Deploy" and wait for your frontend to deploy.
-
-Once deployed, you should be able to use your hosted instance of Chatbot UI via the URL Vercel gives you.
-
-## Contributing
-
-We are working on a guide for contributing.
-
-## Contact
-
-Message Mckay on [Twitter/X](https://twitter.com/mckaywrigley)
+Inherits the license from the original [chatbot-ui](https://github.com/mckaywrigley/chatbot-ui) project.
